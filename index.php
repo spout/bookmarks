@@ -131,8 +131,14 @@ $save = false;
 switch ($action) {
     case 'tags':
         if (!empty($_GET['format']) && $_GET['format'] === 'json') {
+            $tags = array_keys($tags);
+            if (!empty($_GET['term'])) {
+                $tags = array_values(array_filter($tags, function ($val) {
+                    return strpos($val, $_GET['term']) !== false;
+                }));
+            }
             header('Content-Type: application/json');
-            echo json_encode(array_keys($tags));
+            echo json_encode($tags);
             exit;
         }
         break;
