@@ -206,11 +206,11 @@ if (!empty($_GET['tag'])) {
     });
 }
 
-usort($bookmarks, function ($a, $b) {
+uasort($bookmarks, function ($a, $b) {
     return $b['created_at'] <=> $a['created_at'];
 });
 
-$bookmarksChunked = array_chunk($bookmarks, $config['perPage']);
+$bookmarksChunked = array_chunk($bookmarks, $config['perPage'], true);
 $bookmarks = $bookmarksChunked[$page - 1] ?? [];
 ?>
 <!doctype html>
