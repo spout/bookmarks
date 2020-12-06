@@ -264,7 +264,7 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
                 $url = url(['action' => 'add']);
                 $bookmarklet = "window.open('$url&url='+encodeURIComponent(window.location.href)+'&title='+encodeURIComponent(document.title));";
                 ?>
-                <?php echo __("Bookmarklet")?>: <a href="javascript:<?php echo $bookmarklet; ?>"><?php echo sprintf("Save on %s", $config['title']); ?></a>
+                <?php echo __("Bookmarklet"); ?>: <a href="javascript:<?php echo $bookmarklet; ?>"><?php echo __("Save on %s", $config['title']); ?></a>
             </span>
 
             <ul class="nav navbar-nav navbar-right">
