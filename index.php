@@ -238,7 +238,7 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
                 </li>
                 <?php if($loggedIn): ?>
                     <li class="nav-item <?php echo $action === 'add' ? 'active' : ''; ?>">
-                        <a href="<?php echo h(url(['action' => 'add'])); ?>" class="nav-link"><?php echo __("Add"); ?></a>
+                        <a href="<?php echo h(url(['action' => 'add'])); ?>" class="nav-link"><?php echo __("Add bookmark"); ?></a>
                     </li>
                     <li class="nav-item">
                         <a href="#" onclick="logout()" class="nav-link"><?php echo __("Logout"); ?></a>
