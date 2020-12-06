@@ -119,6 +119,11 @@ function getFlash()
     return $html;
 }
 
+function favicon($url)
+{
+    return "http://www.google.com/s2/favicons?domain_url={$url}";
+}
+
 if (in_array($action, ['login', 'add', 'edit', 'delete'])) {
     if (!$loggedIn) {
         header(sprintf('WWW-Authenticate: Basic realm="%s"', __("My Realm")));
@@ -345,7 +350,7 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
                 </div>
                 <div class="card-body p-2">
                     <p>
-                        <a href="<?php echo h($bookmark['url']); ?>" target="_blank"><?php echo h($bookmark['url']); ?></a>
+                        <img src="<?php echo favicon($bookmark['url']); ?>" alt=""> <a href="<?php echo h($bookmark['url']); ?>" target="_blank"><?php echo h($bookmark['url']); ?></a>
                     </p>
                     <ul class="list-inline mb-0">
                         <?php foreach ($bookmark['tags'] as $tag): ?>
