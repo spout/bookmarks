@@ -62,9 +62,19 @@ function debug(...$vars)
     }
 }
 
-function __($message)
+function __($message, $args = null)
 {
-    return _($message);
+    if (!$message) {
+        return '';
+    }
+
+    $translated = _($message);
+    if ($args === null) {
+        return $translated;
+    } elseif (!is_array($args)) {
+        $args = array_slice(func_get_args(), 1);
+    }
+    return vsprintf($translated, $args);
 }
 
 function formValue($name, $default = null)
