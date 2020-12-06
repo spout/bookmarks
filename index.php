@@ -6,7 +6,7 @@ $config = [
     'bookmarks' => 'bookmarks.json',
     'auth' => [
         'username' => 'spout',
-        'password' => 'secret',
+        'password' => '5p0u7n1k',
     ],
     'themes' => [
         'cerulean',
@@ -53,11 +53,13 @@ function h($var)
     return htmlspecialchars($var);
 }
 
-function debug($var)
+function debug(...$vars)
 {
-    echo '<pre>';
-    print_r($var);
-    echo '</pre>';
+    foreach ($vars as $var) {
+        echo '<pre>';
+        echo h(print_r($var, true));
+        echo '</pre>';
+    }
 }
 
 function __($message)
