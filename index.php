@@ -240,6 +240,9 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
                     <li class="nav-item <?php echo $action === 'add' ? 'active' : ''; ?>">
                         <a href="<?php echo h(url(['action' => 'add'])); ?>" class="nav-link"><?php echo __("Add"); ?></a>
                     </li>
+                    <li class="nav-item">
+                        <a href="#" onclick="logout()" class="nav-link"><?php echo __("Logout"); ?></a>
+                    </li>
                 <?php else: ?>
                     <li class="nav-item">
                         <a href="<?php echo h(url(['action' => 'login'])); ?>" class="nav-link"><?php echo __("Login"); ?></a>
@@ -409,6 +412,23 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
       return confirm($(this).data('confirm'))
     })
   })
+
+  // https://stackoverflow.com/a/30308402
+  function logout () {
+    $.ajax({
+      type: 'GET',
+      url: '<?php echo url(['action' => 'login']); ?>',
+      dataType: 'json',
+      async: true,
+      username: 'logout',
+      password: 'password'
+    }).done(function () {
+      alert('<?php echo __("Error!"); ?>')
+    }).fail(function () {
+      window.location = '/'
+    })
+    return false
+  }
 </script>
 </body>
 </html>
