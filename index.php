@@ -1,39 +1,8 @@
 <?php
+
 ini_set('display_errors', 1);
 
-$config = [
-    'title' => "Bookmarks",
-    'bookmarks' => 'bookmarks.json',
-    'auth' => [
-        'username' => 'spout',
-        'password' => '5p0u7n1k',
-    ],
-    'themes' => [
-        'cerulean',
-        'cosmo',
-        'cyborg',
-        'darkly',
-        'flatly',
-        'journal',
-        'litera',
-        'lumen',
-        'lux',
-        'materia',
-        'minty',
-        'pulse',
-        'sandstone',
-        'simplex',
-        'sketchy',
-        'slate',
-        'solar',
-        'spacelab',
-        'superhero',
-        'united',
-        'yeti',
-    ],
-    'theme' => 'flatly',
-    'perPage' => 50,
-];
+$config = require 'config.php';
 
 session_start();
 
@@ -48,7 +17,7 @@ $errors = [];
 
 define('BASE_URL', "{$protocol}://{$_SERVER['HTTP_HOST']}/{$dirname}");
 
-function h($var)
+function h($var): string
 {
     return htmlspecialchars($var);
 }
@@ -62,7 +31,7 @@ function debug(...$vars)
     }
 }
 
-function __($message, $args = null)
+function __($message, $args = null): string
 {
     if (!$message) {
         return '';
@@ -82,7 +51,7 @@ function formValue($name, $default = null)
     return $_POST[$name] ?? $default;
 }
 
-function url($query = [])
+function url($query = []): string
 {
     return BASE_URL . (!empty($query) ? '?' . http_build_query($query) : '');
 }
@@ -97,7 +66,7 @@ function flash($type, $msg) {
     $_SESSION['flash'][$type][] = $msg;
 }
 
-function getFlash()
+function getFlash(): string
 {
     if (!isset($_SESSION['flash'])) {
         return '';
@@ -119,17 +88,15 @@ function getFlash()
     return $html;
 }
 
-function favicon($url)
+function favicon($url): string
 {
-    return "http://www.google.com/s2/favicons?domain_url={$url}";
+    return "https://www.google.com/s2/favicons?domain_url={$url}";
 }
 
-if (in_array($action, ['login', 'add', 'edit', 'delete'])) {
-    if (!$loggedIn) {
-        header(sprintf('WWW-Authenticate: Basic realm="%s"', __("My Realm")));
-        http_response_code(401);
-        die(__("Not authorized"));
-    }
+if (in_array($action, ['login', 'add', 'edit', 'delete']) && !$loggedIn) {
+    header(sprintf('WWW-Authenticate: Basic realm="%s"', __("My Realm")));
+    http_response_code(401);
+    die(__("Not authorized"));
 }
 
 $tags = [];
@@ -148,12 +115,9 @@ $save = false;
 switch ($action) {
     case 'tags':
         if (!empty($_GET['format']) && $_GET['format'] === 'json') {
-            $tags = array_keys($tags);
-            if (!empty($_GET['term'])) {
-                $tags = array_values(array_filter($tags, function ($val) {
-                    return strpos($val, $_GET['term']) !== false;
-                }));
-            }
+            $tags = array_map(function ($tag) {
+                return compact('tag');
+            }, array_keys($tags));
             header('Content-Type: application/json');
             echo json_encode($tags);
             exit;
@@ -234,9 +198,9 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.4.1/<?php echo $theme; ?>/bootstrap.min.css" id="theme">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.12/css/select2.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.2.2/dist/<?php echo $theme; ?>/bootstrap.min.css" id="theme">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css">
     <title><?php echo h($config['title']); ?></title>
 </head>
 <body>
@@ -251,7 +215,7 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
                 <li class="nav-item <?php echo $action === 'tags' ? 'active' : ''; ?>">
                     <a class="nav-link" href="<?php echo h(url(['action' => 'tags'])); ?>"><?php echo __("Tags"); ?></a>
                 </li>
-                <?php if($loggedIn): ?>
+                <?php if ($loggedIn): ?>
                     <li class="nav-item <?php echo $action === 'add' ? 'active' : ''; ?>">
                         <a href="<?php echo h(url(['action' => 'add'])); ?>" class="nav-link"><?php echo __("Add bookmark"); ?></a>
                     </li>
@@ -274,7 +238,7 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
 
             <ul class="nav navbar-nav navbar-right">
                 <li class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown"><i class="fa fa-paint-brush"></i> Theme <span class="caret"></span></a>
+                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"><i class="fa fa-paint-brush"></i> Theme <span class="caret"></span></a>
                     <div class="dropdown-menu">
                         <?php foreach ($config['themes'] as $t): ?>
                         <a href="#" data-theme="<?php echo $t; ?>" class="dropdown-item <?php echo $theme === $t ? 'active' : ''; ?>"><?php echo ucfirst($t); ?></a>
@@ -288,14 +252,14 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
 
 <div class="container">
     <?php echo getFlash(); ?>
-    <?php if(in_array($action, ['add', 'edit'])): ?>
+    <?php if (in_array($action, ['add', 'edit'])): ?>
         <form action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="post">
             <div class="card">
                 <div class="card-header">
                     <?php echo __("Add bookmark"); ?>
                 </div>
                 <div class="card-body">
-                    <?php if(!empty($errors)): ?>
+                    <?php if (!empty($errors)): ?>
                         <div class="alert alert-danger">
                             <ul class="mb-0">
                                 <?php foreach ($errors as $error): ?>
@@ -304,32 +268,30 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
                             </ul>
                         </div>
                     <?php endif; ?>
-                    <div class="form-group">
-                        <div class="form-group">
-                            <label for="url"><?php echo __("URL"); ?></label>
-                            <input type="url" class="form-control" name="url" id="url" value="<?php echo h(formValue('url', $_GET['url'] ?? null)); ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="title"><?php echo __("Title"); ?></label>
-                            <input type="text" class="form-control" name="title" id="title" value="<?php echo h(formValue('title', $_GET['title'] ?? null)); ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="tags"><?php echo __("Tags"); ?></label>
-                            <select id="tags" multiple="multiple" class="form-control" name="tags[]" required>
-                                <?php foreach (formValue('tags', []) as $tag): ?>
-                                    <option value="<?php echo h($tag); ?>" selected><?php echo h($tag); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary btn-block"><?php echo __("Save"); ?></button>
-                        </div>
+                    <div class="mb-3">
+                        <label for="url"><?php echo __("URL"); ?></label>
+                        <input type="url" class="form-control" name="url" id="url" value="<?php echo h(formValue('url', $_GET['url'] ?? null)); ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="title"><?php echo __("Title"); ?></label>
+                        <input type="text" class="form-control" name="title" id="title" value="<?php echo h(formValue('title', $_GET['title'] ?? null)); ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="tags"><?php echo __("Tags"); ?></label>
+                        <select id="tags" multiple="multiple" name="tags[]" required>
+                            <?php foreach (formValue('tags', []) as $tag): ?>
+                                <option value="<?php echo h($tag); ?>" selected><?php echo h($tag); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary"><?php echo __("Save"); ?></button>
                     </div>
                 </div>
             </div>
         </form>
-    <?php elseif($action === 'tags'): ?>
-        <?php if(!empty($tags)): ?>
+    <?php elseif ($action === 'tags'): ?>
+        <?php if (!empty($tags)): ?>
             <ul class="list-unstyled">
                 <?php foreach ($tags as $tag => $bookmarks): ?>
                     <li><a href="<?php echo h(url(['tag' => $tag])) ; ?>"><?php echo h($tag); ?></a> <span class="badge badge-light"><?php echo count($bookmarks); ?></span></li>
@@ -341,8 +303,8 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
             <div class="card mb-2">
                 <div class="card-header p-2">
                     <a href="<?php echo h($bookmark['url']); ?>" target="_blank"><?php echo h($bookmark['title']); ?></a>
-                    <?php if($loggedIn): ?>
-                        <div class="float-right">
+                    <?php if ($loggedIn): ?>
+                        <div class="float-end">
                             <a href="<?php echo h(url(['action' => 'edit', 'key' => $key])); ?>" class="btn btn-secondary"><?php echo __("Edit"); ?></a>
                             <a href="<?php echo h(url(['action' => 'delete', 'key' => $key])); ?>" class="btn btn-danger" data-confirm="<?php echo __("Are you sure?"); ?>"><?php echo __("Delete"); ?></a>
                         </div>
@@ -354,7 +316,7 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
                     </p>
                     <ul class="list-inline mb-0">
                         <?php foreach ($bookmark['tags'] as $tag): ?>
-                            <li class="list-inline-item"><a href="<?php echo h(url(['tag' => $tag])); ?>"><span class="badge badge-secondary"><?php echo h($tag); ?></span></a></li>
+                            <li class="list-inline-item"><a href="<?php echo h(url(['tag' => $tag])); ?>"><span class="badge bg-secondary"><?php echo h($tag); ?></span></a></li>
                         <?php endforeach; ?>
                     </ul>
                 </div>
@@ -364,19 +326,14 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
             </div>
         <?php endforeach;?>
 
-        <?php if(count($bookmarksChunked) > 1): ?>
+        <?php if (count($bookmarksChunked) > 1): ?>
             <ul class="pagination">
-                <?php if(isset($bookmarksChunked[$page - 1 - 1])): ?>
+                <?php if (isset($bookmarksChunked[$page - 1 - 1])): ?>
                     <li class="page-item">
                         <a href="<?php echo h(url(['page' => $page - 1])); ?>" class="page-link">&laquo; <?php echo __("Prev"); ?></a>
                     </li>
                 <?php endif; ?>
-                <?php /*foreach ($bookmarksChunked as $k => $chunk): ?>
-                    <li class="page-item">
-                        <a href="<?php echo h(url(['page' => $k + 1])); ?>" class="page-link"><?php echo $k + 1; ?></a>
-                    </li>
-                <?php endforeach;*/ ?>
-                <?php if(isset($bookmarksChunked[$page + 1])): ?>
+                <?php if (isset($bookmarksChunked[$page + 1])): ?>
                     <li class="page-item">
                         <a href="<?php echo h(url(['page' => $page + 1])); ?>" class="page-link"><?php echo __("Next"); ?> &raquo;</a>
                     </li>
@@ -386,62 +343,60 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
     <?php endif; ?>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.1/js.cookie.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.12/js/select2.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 <script>
-  $(function () {
-    $('[data-theme]').on('click', function (e) {
-      e.preventDefault()
-      let theme = $(this).data('theme')
-      let $dropdown = $(this).closest('.dropdown-menu')
-      Cookies.set('theme', theme)
-      $('#theme').attr('href', `https://stackpath.bootstrapcdn.com/bootswatch/4.4.1/${theme}/bootstrap.min.css`)
-      $dropdown.find('.active').removeClass('active')
-      $dropdown.find(`[data-theme="${theme}"]`).addClass('active')
+  /* global Cookies */
+  /* global TomSelect */
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-theme]').forEach(el => {
+      el.onclick = function (e) {
+        e.preventDefault()
+        let theme = this.dataset.theme
+        let dropdown = this.closest('.dropdown-menu')
+        Cookies.set('theme', theme)
+        document.getElementById('theme').setAttribute('href', `https://cdn.jsdelivr.net/npm/bootswatch@5.2.2/dist/${theme}/bootstrap.min.css`)
+        dropdown.querySelector('.active').classList.remove('active')
+        dropdown.querySelector(`[data-theme="${theme}"]`).classList.add('active')
+      }
     })
 
-    $('#tags').select2({
-      tags: true,
-      tokenSeparators: [','],
-      ajax: {
-        url: "<?php echo url(['action' => 'tags', 'format' => 'json']); ?>",
-        processResults: function (data) {
-          return {
-            results: $.map(data, function (item) {
-              return {
-                text: item,
-                id: item
-              }
+    if (document.getElementById('tags')) {
+      new TomSelect('#tags', {
+        create: true,
+        valueField: 'tag',
+        labelField: 'tag',
+        searchField: 'tag',
+        load: function(query, callback) {
+          let url = '<?php echo url(['action' => 'tags', 'format' => 'json']); ?>'
+          fetch(url)
+            .then(response => response.json())
+            .then(json => {
+              callback(json)
             })
-          }
         },
-        cache: true
-      },
-      minimumInputLength: 1
-    })
+        render: {
+          option: function(item, escape) {
+            return `<div>${item.tag}</div>`
+          }
+        }
+      })
+    }
 
-    $('[data-confirm]').on('click', function () {
-      return confirm($(this).data('confirm'))
+    document.querySelectorAll('[data-confirm]').forEach(el => {
+      el.onclick = function () {
+        return confirm(el.dataset.confirm)
+      }
     })
   })
 
   // https://stackoverflow.com/a/30308402
   function logout () {
-    $.ajax({
-      type: 'GET',
-      url: '<?php echo url(['action' => 'login']); ?>',
-      dataType: 'json',
-      async: true,
-      username: 'logout',
-      password: 'password'
-    }).done(function () {
-      alert('<?php echo __("Error!"); ?>')
-    }).fail(function () {
-      window.location = '/'
-    })
+    const request = new XMLHttpRequest();
+    request.open('get', '<?php echo url(['action' => 'login']); ?>', false, 'username', 'password');
+    request.send();
+    window.location = '/'
     return false
   }
 </script>
