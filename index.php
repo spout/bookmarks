@@ -199,15 +199,16 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.2.2/dist/<?php echo $theme; ?>/bootstrap.min.css" id="theme">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css">
+    <?php foreach ($config['assets']['styles'] as $id => $url): ?>
+        <link rel="stylesheet" href="<?php echo str_replace('{theme}', $theme, $url); ?>" id="<?php echo $id; ?>">
+    <?php endforeach; ?>
     <title><?php echo h($config['title']); ?></title>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light mb-3">
     <div class="container">
         <a class="navbar-brand" href="<?php echo h(url()); ?>"><?php echo h($config['title']); ?></a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -241,7 +242,7 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
                     <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"><i class="fa fa-paint-brush"></i> Theme <span class="caret"></span></a>
                     <div class="dropdown-menu">
                         <?php foreach ($config['themes'] as $t): ?>
-                        <a href="#" data-theme="<?php echo $t; ?>" class="dropdown-item <?php echo $theme === $t ? 'active' : ''; ?>"><?php echo ucfirst($t); ?></a>
+                        <a href="#" data-theme="<?php echo $t; ?>" class="dropdown-item<?php echo $theme === $t ? ' active' : ''; ?>"><?php echo ucfirst($t); ?></a>
                         <?php endforeach; ?>
                     </div>
                 </li>
@@ -294,7 +295,7 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
         <?php if (!empty($tags)): ?>
             <ul class="list-unstyled">
                 <?php foreach ($tags as $tag => $bookmarks): ?>
-                    <li><a href="<?php echo h(url(['tag' => $tag])) ; ?>"><?php echo h($tag); ?></a> <span class="badge badge-light"><?php echo count($bookmarks); ?></span></li>
+                    <li><a href="<?php echo h(url(['tag' => $tag])) ; ?>"><?php echo h($tag); ?></a> <span class="badge text-bg-light"><?php echo count($bookmarks); ?></span></li>
                 <?php endforeach; ?>
             </ul>
         <?php endif;?>
@@ -343,9 +344,9 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
     <?php endif; ?>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<?php foreach ($config['assets']['scripts'] as $url): ?>
+    <script src="<?php echo $url; ?>"></script>
+<?php endforeach; ?>
 <script>
   /* global Cookies */
   /* global TomSelect */
@@ -356,7 +357,7 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
         let theme = this.dataset.theme
         let dropdown = this.closest('.dropdown-menu')
         Cookies.set('theme', theme)
-        document.getElementById('theme').setAttribute('href', `https://cdn.jsdelivr.net/npm/bootswatch@5.2.2/dist/${theme}/bootstrap.min.css`)
+        document.getElementById('theme').setAttribute('href', '<?php echo $config['assets']['styles']['theme']; ?>'.replace('{theme}', theme))
         dropdown.querySelector('.active').classList.remove('active')
         dropdown.querySelector(`[data-theme="${theme}"]`).classList.add('active')
       }
@@ -368,6 +369,7 @@ $bookmarks = $bookmarksChunked[$page - 1] ?? [];
         valueField: 'tag',
         labelField: 'tag',
         searchField: 'tag',
+        closeAfterSelect: true,
         load: function(query, callback) {
           let url = '<?php echo url(['action' => 'tags', 'format' => 'json']); ?>'
           fetch(url)
